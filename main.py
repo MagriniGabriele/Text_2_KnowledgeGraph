@@ -1,13 +1,6 @@
-import spacy
-from spacy.lang.en import English
-from spacy.lang.it import Italian
-
-from Summarizer import Summarizer
+from Summarizer import PageRankSummarizer
 
 if __name__ == '__main__':
-
-    # Caricamento modello inglese web per spacy
-    nlp = Italian()
-    sm = Summarizer(nlp, "./documents")
-    sm.print()
-
+    pr_summarizer = PageRankSummarizer("./documents", )
+    pr_summarizer.summarize()
+    print(pr_summarizer)
