@@ -4,6 +4,8 @@ from abc import ABC
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
+from typing import List
+
 from Document import Document
 import os
 import numpy as np
@@ -25,7 +27,7 @@ class Summarizer(ABC):
         nferiore di frasi, ne vengono estratte la metà
         """
         def _load_text(path: str):
-            texts = list[str]()
+            texts = list()
             for file in os.listdir(path):
                 if not file.endswith(".txt"):
                     # ignora file non testuali
@@ -35,7 +37,7 @@ class Summarizer(ABC):
             return texts
 
         self.texts = _load_text(document_dir)
-        self.summaries = list[str]()
+        self.summaries = list()
         self.top_n = top_n
 
     def summarize(self):
@@ -66,7 +68,7 @@ class Summarizer(ABC):
         #         self.texts[i], "\n\n"
         #     )
 
-    def read_document(self, file_index, text_list: list[str] = None):
+    def read_document(self, file_index, text_list: List[str] = None):
         """
         effettua il parsing dei testi o dei riassunti caricati
         :param file_index: indice del testo all'interno del vettore dei testi
@@ -75,7 +77,7 @@ class Summarizer(ABC):
         """
         if text_list is None:
             text_list = self.texts
-        sentences = list[list[str]]()
+        sentences = list()
         text = text_list[file_index]
         split = text.split(".")
         for sentence in split:
@@ -96,7 +98,7 @@ class PageRankSummarizer(Summarizer):
             self.summaries[i] = self.generate_summary(i, self.top_n)
 
     @staticmethod
-    def __sentence_similarity(sentence1: list[str], sentence2: list[str], stop_words=stopwords):
+    def __sentence_similarity(sentence1: List[str], sentence2: List[str], stop_words=stopwords):
         """
         compara due frasi dopo averle proiettate in uno spazio vettoriale
         :param sentence1: una lista di stringhe, ciascuna rappresenta una parola della frase
@@ -105,7 +107,7 @@ class PageRankSummarizer(Summarizer):
         :return: la similarità delle due frasi [0,1]
         """
 
-        def to_vector_space(sentence: list[str], word_set: list[str], stop_word_list) -> list[int]:
+        def to_vector_space(sentence: List[str], word_set: List[str], stop_word_list) -> List[int]:
             """
             mappa una frase in uno spazio vettoriale, modellato come un beg of words + cardinalità
             :param sentence: una lista di stringhe, ciascuna rappresenta una parola della frase
@@ -135,7 +137,7 @@ class PageRankSummarizer(Summarizer):
         return 1 - cosine_distance(sentence1_vec, sentence2_vec)
 
     @staticmethod
-    def __similarity_matrix(sentences: list[list[str]], stop_words):
+    def __similarity_matrix(sentences: List[List[str]], stop_words):
         """
         genera una mtrice quadrata dove l'elemento ij è il fattore di similarità della frase i-esima con la
         frase j-esima
@@ -158,7 +160,7 @@ class PageRankSummarizer(Summarizer):
         :param top_n: numero di frasi da estrarre
         :return:
         """
-        summarized_sentences = list[str]()
+        summarized_sentences = list()
         stop_words = stopwords.words("english")
 
         sentences = self.read_document(file_index)
