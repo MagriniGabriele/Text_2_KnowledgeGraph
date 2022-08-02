@@ -43,7 +43,7 @@ class Summarizer(ABC):
                 if nlp_pipe is not None:
                     try:
                         doc = nlp_pipe(text)
-                        text = doc._.resolved_coref
+                        text = doc._.coref_resolved
                     except Exception as ex:
                         print(f"Coreference failed with error: \n{ex}\nUsing original text")
                 texts.append(text)
@@ -324,10 +324,10 @@ class KnowledgeBaseSummarizer(Summarizer):
     def __generate_summary(self, index) -> List[str]:
         sentences = self.read_document(index)
         scores = []
-        result = list(list(str))
+        result = []
         for sent in sentences:
             scores.append(self.__score_sentence(sent))
-        for r in sorted((scores, sentences), reverse=True):
+        for r in sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True):
             result.append(" ".join(r[1]))
         return result
 
