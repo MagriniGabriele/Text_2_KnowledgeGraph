@@ -172,7 +172,7 @@ if __name__ == '__main__':
     neuralcoref.add_to_pipe(nlp)
 
     # Testo di esempio
-    text = "Dr.Emanuele hates Lollo.He also sucks dicks.Lollo eats strawberries."
+    text = "Dr.Smith cures people.He also plays basketball during free time;His wife Mrs.Smith hates basketball thought!"
     doct = nlp(text)
 
     # Risoluzione coreferenza
