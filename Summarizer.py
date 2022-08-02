@@ -24,7 +24,7 @@ class Summarizer(ABC):
     Non implementa la logica vera e proprio, quindi usare una delle sue implementazioni
     """
 
-    def __init__(self, document_dir: str, top_n: int):
+    def __init__(self, document_dir: str, top_n: int, nlp_pipe = None):
         """
         Costruttore, carica i testi in memoria, ma non effettua la summarization
         :param document_dir: i testi sono estratti dalla directory indicata, letti da un file di testo
@@ -39,7 +39,14 @@ class Summarizer(ABC):
                     # ignora file non testuali
                     continue
                 document = open(path + os.sep + file, "r")
-                texts.append("".join(document.readlines()))
+                text = "".join(document.readlines())
+                if nlp_pipe is not None:
+                    try:
+                        doc = nlp_pipe(text)
+                        text = doc._.resolved_coref
+                    except Exception as ex:
+                        print(f"Coreference failed with error: \n{ex}\nUsing original text")
+                texts.append(text)
             return texts
 
         self.texts = _load_text(document_dir)
@@ -94,8 +101,8 @@ class Summarizer(ABC):
 
 class PageRankSummarizer(Summarizer):
 
-    def __init__(self, document_dir: str, top_n: int = 5):
-        super().__init__(document_dir, top_n)
+    def __init__(self, document_dir: str, top_n: int = 5, nlp_pipe = None):
+        super().__init__(document_dir, top_n, nlp_pipe)
 
     def summarize(self):
         self.summaries = [""] * len(self.texts)
@@ -188,8 +195,8 @@ class ClusterSummarizer(Summarizer):
     le frasi sono proiettate nello spazione vettoriale bag of words con cardinalità
     """
 
-    def __init__(self, document_dir: str, top_n: 5):
-        super().__init__(document_dir, top_n)
+    def __init__(self, document_dir: str, top_n: 5, nlp_pipe = None):
+        super().__init__(document_dir, top_n, nlp_pipe)
         self.sentences = []  # List[Tuple[List[str], List[float]]]
         self.word_set = set()
         for i in range(len(self.texts)):
@@ -280,8 +287,8 @@ class KnowledgeBaseSummarizer(Summarizer):
     di nodi del knowledge graph
     """
 
-    def __init__(self, documents_path: str, coverage: float, triples: List[Tuple[str, str, str]]):
-        super().__init__(documents_path, 0)  # top_n is not used
+    def __init__(self, documents_path: str, coverage: float, triples: List[Tuple[str, str, str]], nlp_pipe = None):
+        super().__init__(documents_path, 0, nlp_pipe)  # top_n is not used
         self.coverage = coverage if 0 < coverage <= 1 else 0.5
         self.triples = triples
 
