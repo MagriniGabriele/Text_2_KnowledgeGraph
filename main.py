@@ -131,10 +131,12 @@ def get_relation(sent):
 
     matches = matcher(doc)
     k = len(matches) - 1
-
-    span = doc[matches[k][1]:matches[k][2]]
-
-    return (span.text)
+    # ema: se non trova match qua muore
+    if k >= 0:
+        span = doc[matches[k][1]:matches[k][2]]
+        return (span.text)
+    else:
+        return ""
 
 
 def draw_kg(pairs):
@@ -163,9 +165,9 @@ def draw_kg(pairs):
 
 
 if __name__ == '__main__':
+
     # Caricamento modello inglese web per spacy
     nlp = spacy.load('en_core_web_sm')
-
     # Settaggio NeuralCoref
     neuralcoref.add_to_pipe(nlp)
 
@@ -236,9 +238,52 @@ if __name__ == '__main__':
     c_summarizer = ClusterSummarizer("./documents/mario draghi", 5)
     c_summarizer.summarize()
     print(c_summarizer)
-
     print("\n\nKnowledge Base Summarization - Mario Draghi ------------------------------\n")
-    kb_summarizer = KnowledgeBaseSummarizer("./documents/mario draghi", 5,
-                                           [])
-    kb_summarizer.summarize()
-    print(kb_summarizer)
+
+    tekken_document = open("./documents/tekken/tekken.txt", "r")
+    text = ""
+    for line in tekken_document.readlines():
+        text += line
+    doc = nlp(text)
+    text = doc._.coref_resolved
+    doc = nlp(text)
+    entity_pairs = []
+    new_text = str(doc)
+    sentences = split_into_sentences(new_text)
+
+    for sent in sentences:
+        entity_pairs.append(get_entities(sent))
+
+    relations = [get_relation(i) for i in tqdm(sentences)]
+    # extract subject
+    source = [i[0] for i in entity_pairs]
+
+    # extract object
+    target = [i[1] for i in entity_pairs]
+    kg_df = pd.DataFrame({'source': source, 'target': target, 'edge': relations})
+
+    # create a directed-graph from a dataframe
+    G = nx.from_pandas_edgelist(kg_df, "source", "target",
+                                edge_attr=True, create_using=nx.MultiDiGraph())
+
+    # G = nx.from_pandas_edgelist(kg_df[kg_df['edge'] == "won"], "source", "target",
+    #                            edge_attr=True, create_using=nx.MultiDiGraph())
+
+    plt.figure(figsize=(12, 12))
+    pos = nx.spring_layout(G, k=0.5)  # k regulates the distance between nodes
+    nx.draw(G, with_labels=True, node_color='skyblue', node_size=1500, edge_cmap=plt.cm.Blues, pos=pos)
+    # plt.show()
+    plt.savefig(fname="./documents/tekken/tekken.png", format="png")
+    if not len(entity_pairs) == len(source) == len(target):
+        print("Unconsistent triple informations")
+    else:
+        triples = []
+        for i in range(len(relations)):
+            triples.append((
+                source[i],
+                relations[i],
+                target[i]
+            ))
+        kb_summarizer = KnowledgeBaseSummarizer("./documents/tekken", 5, triples)
+        kb_summarizer.summarize()
+        print(kb_summarizer)

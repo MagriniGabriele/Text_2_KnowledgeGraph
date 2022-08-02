@@ -24,7 +24,7 @@ class Summarizer(ABC):
     Non implementa la logica vera e proprio, quindi usare una delle sue implementazioni
     """
 
-    def __init__(self, document_dir: str, top_n: int, nlp_pipe = None):
+    def __init__(self, document_dir: str, top_n: int, nlp_pipe=None):
         """
         Costruttore, carica i testi in memoria, ma non effettua la summarization
         :param document_dir: i testi sono estratti dalla directory indicata, letti da un file di testo
@@ -101,7 +101,7 @@ class Summarizer(ABC):
 
 class PageRankSummarizer(Summarizer):
 
-    def __init__(self, document_dir: str, top_n: int = 5, nlp_pipe = None):
+    def __init__(self, document_dir: str, top_n: int = 5, nlp_pipe=None):
         super().__init__(document_dir, top_n, nlp_pipe)
 
     def summarize(self):
@@ -195,7 +195,7 @@ class ClusterSummarizer(Summarizer):
     le frasi sono proiettate nello spazione vettoriale bag of words con cardinalità
     """
 
-    def __init__(self, document_dir: str, top_n: 5, nlp_pipe = None):
+    def __init__(self, document_dir: str, top_n: 5, nlp_pipe=None):
         super().__init__(document_dir, top_n, nlp_pipe)
         self.sentences = []  # List[Tuple[List[str], List[float]]]
         self.word_set = set()
@@ -287,9 +287,9 @@ class KnowledgeBaseSummarizer(Summarizer):
     di nodi del knowledge graph
     """
 
-    def __init__(self, documents_path: str, coverage: float, triples: List[Tuple[str, str, str]], nlp_pipe = None):
-        super().__init__(documents_path, 0, nlp_pipe)  # top_n is not used
-        self.coverage = coverage if 0 < coverage <= 1 else 0.5
+    def __init__(self, documents_path: str, top_n: int, triples: List[Tuple[str, str, str]], nlp_pipe=None):
+        super().__init__(documents_path, top_n, nlp_pipe)  # top_n is not used
+        # self.coverage = coverage if 0 < coverage <= 1 else 0.5
         self.triples = triples
 
     def __score_sentence(self, sentence: List[str]):
@@ -335,5 +335,5 @@ class KnowledgeBaseSummarizer(Summarizer):
         self.summaries = [""] * len(self.texts)
         for i in range(len(self.texts)):
             sorted_sents = self.__generate_summary(i)
-            self.summaries[i] = ". ".join(sorted_sents[0: self.top_n if self.top_n <= len(sorted_sents) else
-                (len(sorted_sents) / 2) + 1])
+            self.summaries[i] = ". ".join(sorted_sents[0: self.top_n
+                if len(sorted_sents) >= self.top_n > 0 else (len(sorted_sents) / 2) + 1])
