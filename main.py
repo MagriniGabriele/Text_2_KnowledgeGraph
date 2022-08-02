@@ -139,31 +139,6 @@ def get_relation(sent):
         return ""
 
 
-def draw_kg(pairs):
-    k_graph = nx.from_pandas_edgelist(pairs, 'subject', 'object',
-                                      create_using=nx.MultiDiGraph())
-    node_deg = nx.degree(k_graph)
-    layout = nx.spring_layout(k_graph, k=0.15, iterations=20)
-    plt.figure(num=None, figsize=(120, 90), dpi=80)
-    nx.draw_networkx(
-        k_graph,
-        node_size=[int(deg[1]) * 500 for deg in node_deg],
-        arrowsize=20,
-        linewidths=1.5,
-        pos=layout,
-        edge_color='red',
-        edgecolors='black',
-        node_color='white',
-    )
-    labels = dict(zip(list(zip(pairs.subject, pairs.object)),
-                      pairs['relation'].tolist()))
-    nx.draw_networkx_edge_labels(k_graph, pos=layout, edge_labels=labels,
-                                 font_color='red')
-    plt.axis('off')
-    plt.show()
-
-
-
 if __name__ == '__main__':
 
     # Caricamento modello inglese web per spacy
@@ -172,7 +147,7 @@ if __name__ == '__main__':
     neuralcoref.add_to_pipe(nlp)
 
     # Testo di esempio
-    text = "Dr.Smith cures people.He also plays basketball during free time;His wife Mrs.Smith hates basketball thought!"
+    text = "Dr.Smith cures people.He also plays basketball during free time;His wife Elizabeth hates basketball thought!"
     doct = nlp(text)
 
     # Risoluzione coreferenza
@@ -224,7 +199,22 @@ if __name__ == '__main__':
 
     plt.figure(figsize=(12, 12))
     pos = nx.spring_layout(G, k=0.5)  # k regulates the distance between nodes
-    nx.draw(G, with_labels=True, node_color='skyblue', node_size=1500, edge_cmap=plt.cm.Blues, pos=pos)
+    layout = (nx.random_layout(G))
+    nx.draw_networkx(
+        G,
+        node_size=1000,
+        arrowsize=20,
+        linewidths=1.5,
+        pos=layout,
+        edge_color='red',
+        edgecolors='black',
+        node_color='white'
+    )
+    labels = dict(zip(list(zip(source, target)),
+                      relations))
+    nx.draw_networkx_edge_labels(G, pos=layout, edge_labels=labels,
+                                 font_color='red')
+    plt.axis('off')
     plt.show()
 
 

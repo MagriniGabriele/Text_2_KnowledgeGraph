@@ -14,7 +14,6 @@ def draw_kg(pairs):
                                       create_using=nx.MultiDiGraph())
     node_deg = nx.degree(k_graph)
     layout = nx.spring_layout(k_graph, k=0.15, iterations=20)
-    plt.figure(num=None, figsize=(120, 90), dpi=80)
     nx.draw_networkx(
         k_graph,
         node_size=[int(deg[1]) * 500 for deg in node_deg],
@@ -212,7 +211,7 @@ def get_entity_pairs(text, coref=True):
 if __name__ == '__main__':
     # wiki_data = wiki_scrape('Financial crisis of 2007–08')
     # print(wiki_data.loc[0, 'text'])
-    text = "Dr.Emanuele cures people.He also plays golf regularly.His wife Mrs.Smith doesn't like this though."
+    text = "Dr.Emanuele cures people.He also plays golf regularly.His wife doesn't like this though."
     # pairs = get_entity_pairs(wiki_data.loc[0, 'text'])
     pairs = get_entity_pairs(text)
     for i in pairs:
@@ -225,4 +224,4 @@ if __name__ == '__main__':
     # nx.draw(G, with_labels=True, node_color='skyblue', node_size=1500, edge_cmap=plt.cm.Blues, pos=pos)
     # plt.show()
     filter_graph(pairs, 'Emanuele')
-    filter_graph(pairs, 'Lorenzo')
+    filter_graph(pairs, 'wife')
