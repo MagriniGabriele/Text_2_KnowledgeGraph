@@ -50,7 +50,7 @@ def split_into_sentences(text):
         text = text.replace("!\"", "\"!")
     if "?" in text:
         text = text.replace("?\"", "\"?")
-    text = text.replace(",", ".<stop>")  # AGGIUNTA VIRGOLA COME PUNTO STOP
+    text = text.replace(";", ";<stop>")  # AGGIUNTA VIRGOLA COME PUNTO STOP
     text = text.replace(".", ".<stop>")
     text = text.replace("?", "?<stop>")
     text = text.replace("!", "!<stop>")
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     print(pr_summarizer)
 
     print("\n\nCluster Summarization - Mario Draghi ------------------------------\n")
-    c_summarizer = ClusterSummarizer("./documents/mario draghi", 5)
+    c_summarizer = ClusterSummarizer("./documents/mario draghi", 5, nlp)
     c_summarizer.summarize()
     print(c_summarizer)
     print("\n\nKnowledge Base Summarization - Mario Draghi ------------------------------\n")
