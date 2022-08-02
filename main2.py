@@ -212,7 +212,7 @@ def get_entity_pairs(text, coref=True):
 if __name__ == '__main__':
     # wiki_data = wiki_scrape('Financial crisis of 2007–08')
     # print(wiki_data.loc[0, 'text'])
-    text = "Dr.Emanuele hates rich people.He also sucks dicks.Lollo is even more gay than Emanuele."
+    text = "Dr.Emanuele cures people.He also plays golf regularly.His wife Mrs.Smith doesn't like this though."
     # pairs = get_entity_pairs(wiki_data.loc[0, 'text'])
     pairs = get_entity_pairs(text)
     for i in pairs:
