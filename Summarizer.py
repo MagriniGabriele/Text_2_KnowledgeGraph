@@ -1,10 +1,15 @@
+import math
 import os
 from abc import ABC
+from builtins import staticmethod
 
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
-from typing import List
+from nltk.cluster import kmeans
+from gensim.models import Word2Vec
+
+from typing import List, Tuple
 
 from Document import Document
 import os
@@ -26,6 +31,7 @@ class Summarizer(ABC):
         :param top_n: numero di frasi significative da estrarre: se il documento presenta un numero i
         nferiore di frasi, ne vengono estratte la metà
         """
+
         def _load_text(path: str):
             texts = list()
             for file in os.listdir(path):
@@ -46,20 +52,19 @@ class Summarizer(ABC):
     def __str__(self) -> str:
         if len(self.texts) == 0:
             return "There are no text to be summarized"
-        if len(self.texts) != len(self.summaries):
-            return "The summarization has not been performed yet"
+        # if len(self.texts) != len(self.summaries):
+        # return "The summarization has not been performed yet"
         text = ""
         for i in range(len(self.texts)):
             original_sents = self.read_document(i)
             extracted_sents = self.read_document(i, self.summaries)
-            text += "Text #" + str(i + 1) + ":\n"
-            text = ""
+            text += "\n\n\033[1;38;49mText #" + str(i + 1) + ":\n"
             for sentence in original_sents:
                 if sentence in extracted_sents:
                     text += "\033[1;31;49m" + " ".join(sentence) + ". "
                 else:
                     text += "\033[1;38;49m" + " ".join(sentence) + ". "
-            return text
+        return text
         # for i in range(len(self.texts)):
         #     print(
         #         "Text #", i + 1, ":\n",
@@ -68,12 +73,12 @@ class Summarizer(ABC):
         #         self.texts[i], "\n\n"
         #     )
 
-    def read_document(self, file_index, text_list: List[str] = None):
+    def read_document(self, file_index, text_list: List[str] = None) -> List[List[str]]:
         """
         effettua il parsing dei testi o dei riassunti caricati
         :param file_index: indice del testo all'interno del vettore dei testi
         :param text_list: vettore dei testi. se non specificato è il vettore dei testi originali
-        :return:
+        :return lista delle frasi, rappresentate come lista di parole:
         """
         if text_list is None:
             text_list = self.texts
@@ -107,7 +112,7 @@ class PageRankSummarizer(Summarizer):
         :return: la similarità delle due frasi [0,1]
         """
 
-        def to_vector_space(sentence: List[str], word_set: List[str], stop_word_list) -> List[int]:
+        def to_vector_space(sentence: List[List[str]], word_set: List[str], stop_word_list) -> List[int]:
             """
             mappa una frase in uno spazio vettoriale, modellato come un beg of words + cardinalità
             :param sentence: una lista di stringhe, ciascuna rappresenta una parola della frase
@@ -170,34 +175,158 @@ class PageRankSummarizer(Summarizer):
 
         ranked_sentences = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
         print("Ranked sentences: ", ranked_sentences)
-        for i in range(top_n if top_n < len(sentences) else len(sentences)/2 + 1):
+        for i in range(top_n if top_n < len(sentences) else len(sentences) / 2 + 1):
             summarized_sentences.append(" ".join(ranked_sentences[i][1]))
         return ". ".join(summarized_sentences)
-#
-#
-# class DocWrapper:
-#
-#     def __init__(self, text: str, title: str):
-#         self.title = title
-#         self.text = text.lower()
-#         for stopword in stopwords.word("english"):
-#             self.text = self.text.replace(stopword, "")
-#         self.sentences = text.split(".")
-#
-#
-# class SuperviseSummarizer:
-#
-#     def __init__(self):
-#         self.documents = list()
-#
-#     def load_docs(self, document_folder: str = "./documents"):
-#         for file in listdir(document_folder):
-#             text = ""
-#             title = ""
-#             try:
-#                 text, title = self._get_text(document_folder + sep + file)
-#             except Exception as error:
-#                 print(file, error)
-#             self.documents.append(Document(self.nlp, text, file, title))
-#         self.get_terms()
-#         self.compute_scores()
+
+
+class ClusterSummarizer(Summarizer):
+    """
+    uso del k-mean clustering per ottenere i k cluster (topic) più significativi del documento
+    se un cluster viene sceleto la frase usata sarò quelle più simile alle altre
+    mentre all'inserimento nel cluster, si cerca il centroide più viciono
+    le frasi sono proiettate nello spazione vettoriale bag of words con cardinalità
+    """
+
+    def __init__(self, document_dir: str, top_n: 5):
+        super().__init__(document_dir, top_n)
+        self.sentences = []  # List[Tuple[List[str], List[float]]]
+        self.word_set = set()
+        for i in range(len(self.texts)):
+            sentences = self.read_document(i)
+            for sent in sentences:
+                self.sentences.append((sent, []))
+                self.word_set = self.word_set | set(sent)
+        self.clusters = []
+
+    @staticmethod
+    def to_vector_space(sentence: List[List[str]], word_set: List[str], stop_word_list) -> List[int]:
+        """
+        mappa una frase in uno spazio vettoriale, modellato come un beg of words + cardinalità
+        :param sentence: una lista di stringhe, ciascuna rappresenta una parola della frase
+        :param word_set: l'insieme di parole dello spazio vettoriale
+        :param stop_word_list: porle comuni da ignorare
+        :return: il vettore corrispondente alla frase
+        """
+        vector = [0] * len(word_set)
+        for word in sentence:
+            if word in stop_word_list:
+                continue
+            vector[word_set.index(word)] += 1
+        return vector
+
+    def create_clusters(self):
+        """
+        il kmeans è delegeto ad un implementazione già pronta,
+        qui viene creata l'associazione frase-vettore che permette in seguito di risalire alla frase
+        di partenza
+        :return:
+        """
+        for i in range(len(self.sentences)):
+            self.sentences[i] = (self.sentences[i][0], self.to_vector_space(self.sentences[i][0], list(self.word_set),
+                                                                            stopwords.words("english")))
+
+    def summarize(self):
+        """
+        per effettuare il riassunto si procede come segue
+        - si crea lo spazioe vettoriale formato da tutte le parole presenti in tutti i documenti
+        - si proiettano le frasi su tale spazio
+        - ne si esegue il cluster con k-means, dove k-means è il numero di topic cercato
+        - si cerca per ogni centroide la proiezione più vicina e si prende la frase associata
+        :return:
+        """
+
+        def __closest_vector(target, candidates, distance_function):
+            """
+
+            :param target: vettore numpy bersaglio
+            :param candidates: lista di vettorei numpy nella quale cercare il più viciono
+            :param distance_function: funzione da usare per calcolare la metrica
+            :return: il vettore più vicino
+            """
+            distance = math.inf
+            result = None
+            for candidate in candidates:
+                d = distance_function(target, candidate)
+                if d < distance:
+                    distance = d
+                    result = candidate
+            return result
+
+        self.create_clusters()
+
+        clusterer = kmeans.KMeansClusterer(num_means=self.top_n, distance=cosine_distance, )
+        vectors = []
+        for sentences in self.sentences:
+            vectors.append(np.array(sentences[1]))
+        self.clusters = clusterer.cluster(vectors)
+        self.summaries = []
+        for mean in clusterer.means():
+            sent_vector = __closest_vector(mean, vectors, cosine_distance)
+            for sentence in self.sentences:
+                if np.array_equal(np.array(sentence[1]), sent_vector):
+                    sent = sentence[0]
+                    self.summaries.append(" ".join(sent))
+        self.summaries = ". ".join(self.summaries)
+
+    def __str__(self) -> str:
+        return self.summaries
+
+
+class KnowledgeBaseSummarizer(Summarizer):
+    """
+    riassunto eseguito dopo aver estratto una knowledge base dal testo:
+    l'idea è quella di scegliere il numero minimo di frasi in modo da coprire la maggiore quantità
+    di nodi del knowledge graph
+    """
+
+    def __init__(self, documents_path: str, coverage: float, triples: List[Tuple[str, str, str]]):
+        super().__init__(documents_path, 0)  # top_n is not used
+        self.coverage = coverage if 0 < coverage <= 1 else 0.5
+        self.triples = triples
+
+    def __score_sentence(self, sentence: List[str]):
+        def __triple_match(sent: List[str], triple: Tuple[str, str, str]) -> int:
+            """
+            controlla quanto la tripla è appartentene alla frase, controllando quanti dei suoi elementi sono contenuti
+            dentro la frase; dato che il processo di estrazione dei dati può modificare la stringa, non viene eseguito
+            il match esatto, ma un .contains()
+            :param sent:
+            :param triple:
+            :return numero di elementi della tripla presenti nella frase:
+            """
+
+            score = 0
+            for word in sent:
+                if word in triple[0]:
+                    score += 1
+                    continue
+                if word in triple[1]:
+                    score += 1
+                    continue
+                if word in triple[2]:
+                    score += 1
+                    continue
+            return score
+
+        sentence_score = 0
+        for triple_to_match in self.triples:
+            sentence_score += __triple_match(sentence, triple_to_match) / 3
+        return sentence_score
+
+    def __generate_summary(self, index) -> List[str]:
+        sentences = self.read_document(index)
+        scores = []
+        result = list(list(str))
+        for sent in sentences:
+            scores.append(self.__score_sentence(sent))
+        for r in sorted((scores, sentences), reverse=True):
+            result.append(" ".join(r[1]))
+        return result
+
+    def summarize(self):
+        self.summaries = [""] * len(self.texts)
+        for i in range(len(self.texts)):
+            sorted_sents = self.__generate_summary(i)
+            self.summaries[i] = ". ".join(sorted_sents[0: self.top_n if self.top_n <= len(sorted_sents) else
+                (len(sorted_sents) / 2) + 1])

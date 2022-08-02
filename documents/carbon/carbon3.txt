@@ -1,0 +1,22 @@
+Introduction
+
+Google has announced a new programming language called Carbon. The Carbon release date is 19 July 2022. Carbon is a general-purpose programming language that was created at Google to be a C++ successor language. A Googler named Chandler Carruth introduced developers to the new programming language called Carbon.
+
+Chandler Carruth, the technical lead for Google programming languages, told us that they would be starting this experimental work with the C++ community. The language will be designed and developed on GitHub.
+Why build Carbon?
+
+C++ is struggling to improve and meet developers' needs, as outlined above. This is in no small part due to accumulating decades of technical debt. Improving C++ is extremely difficult, due to the technical debt and challenges with its evolution process. The best way to address these problems is to avoid directly inheriting the legacy of C or C++.
+
+Google also provides an excellent developer experience: Go, Swift, Kotlin, Rust, and many more. Unfortunately, the designs of these languages present significant barriers to adoption and migration from C++. These barriers range from changes in the idiomatic design of software to performance overhead.
+Goals of Carbon Programming Language
+
+Carbon could possibly be an evolution for both software and programming language. It will mainly focus on code that will be easy to write and read.
+
+The Carbon programming language will also be a language that will be fast and scalable in development. It will support all the modern OS platforms and environments.
+
+    Performance-critical software
+    Software and language evolution
+    Code that is easy to read, understand, and write
+    Practical safety and testing mechanisms
+    Fast and scalable development
+
