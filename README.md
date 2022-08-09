@@ -5,3 +5,9 @@ knowledge graph starting from a text file, and then display it.
 It uses libraries such as SpaCy and NeuralCOref to elaborate the text file, 
 and a much more in depth explaination can be found here:
 https://www.overleaf.com/read/ggdbqnpsxtjp
+
+## Usage
+For instruction about using this program, run  
+```python Text2Knowledge.py -h```
+For running a benchmark execute
+```python Text2Knowledge.py . --score True```

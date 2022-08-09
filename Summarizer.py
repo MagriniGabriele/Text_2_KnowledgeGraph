@@ -1,21 +1,18 @@
 import math
-import os
 from abc import ABC
 from builtins import staticmethod
 
-import pandas as pd
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
 from nltk.cluster import kmeans
-from gensim.models import Word2Vec
 
 from typing import List, Tuple
 
-from Document import Document
 import os
 import numpy as np
 import networkx as nx
 
+from Metrics import compression_ratio, data_loss, synthesis_score, extractive_comparison
 
 class Summarizer(ABC):
     """
@@ -40,18 +37,27 @@ class Summarizer(ABC):
                     continue
                 document = open(path + os.sep + file, "r")
                 text = "".join(document.readlines())
-                if nlp_pipe is not None:
+                if self.nlp is not None:
                     try:
-                        doc = nlp_pipe(text)
+                        doc = self.nlp(text)
                         text = doc._.coref_resolved
                     except Exception as ex:
                         print(f"Coreference failed with error: \n{ex}\nUsing original text")
                 texts.append(text)
             return texts
 
+        self.top_n = top_n
+        self.nlp = nlp_pipe
         self.texts = _load_text(document_dir)
         self.summaries = list()
-        self.top_n = top_n
+
+    def report(self, extractor):
+        for i in range(len(self.texts)):
+            print("Document #", i + 1)
+            print("Compression ratio: ", compression_ratio(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Data loss: ", data_loss(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Synthesis score: ", synthesis_score(self.texts[i], self.summaries[i], extractor.nlp))
+            extractive_comparison(self.texts[i], self.summaries[i], extractor)
 
     def summarize(self):
         raise NotImplementedError
@@ -206,6 +212,13 @@ class ClusterSummarizer(Summarizer):
                 self.word_set = self.word_set | set(sent)
         self.clusters = []
 
+    def report(self, extractor):
+        text = "\n".join(self.texts)
+        print("Compression ratio: ", compression_ratio(text, self.summaries, extractor.nlp))
+        print("Data loss: ", data_loss(text, self.summaries, extractor.nlp))
+        print("Synthesis score: ", synthesis_score(text, self.summaries, extractor.nlp))
+        extractive_comparison(text, self.summaries, extractor)
+
     @staticmethod
     def to_vector_space(sentence: List[List[str]], word_set: List[str], stop_word_list) -> List[int]:
         """
@@ -287,7 +300,7 @@ class KnowledgeBaseSummarizer(Summarizer):
     di nodi del knowledge graph
     """
 
-    def __init__(self, documents_path: str, top_n: int, triples: List[Tuple[str, str, str]], nlp_pipe=None):
+    def __init__(self, documents_path: str, top_n: int, triples, nlp_pipe=None):
         super().__init__(documents_path, top_n, nlp_pipe)  # top_n is not used
         # self.coverage = coverage if 0 < coverage <= 1 else 0.5
         self.triples = triples
