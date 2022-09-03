@@ -31,12 +31,14 @@ class Summarizer(ABC):
 
         def _load_text(path: str):
             texts = list()
+            names = list()
             for file in os.listdir(path):
                 if not file.endswith(".txt"):
                     # ignora file non testuali
                     continue
                 document = open(path + os.sep + file, "r")
                 text = "".join(document.readlines())
+                names.append(file)
                 if self.nlp is not None:
                     try:
                         doc = self.nlp(text)
@@ -44,11 +46,12 @@ class Summarizer(ABC):
                     except Exception as ex:
                         print(f"Coreference failed with error: \n{ex}\nUsing original text")
                 texts.append(text)
-            return texts
+            return texts, names
 
+        self.folder_name = document_dir
         self.top_n = top_n
         self.nlp = nlp_pipe
-        self.texts = _load_text(document_dir)
+        self.texts, self.names = _load_text(document_dir)
         self.summaries = list()
 
     def report(self, extractor):
@@ -58,6 +61,10 @@ class Summarizer(ABC):
             print("Data loss: ", data_loss(self.texts[i], self.summaries[i], extractor.nlp))
             print("Synthesis score: ", synthesis_score(self.texts[i], self.summaries[i], extractor.nlp))
             extractive_comparison(self.texts[i], self.summaries[i], extractor)
+
+    def create_folder(self, folder):
+        if not os.path.exists(folder):
+            os.mkdir(folder)
 
     def summarize(self):
         raise NotImplementedError
@@ -114,6 +121,10 @@ class PageRankSummarizer(Summarizer):
         self.summaries = [""] * len(self.texts)
         for i in range(len(self.texts)):
             self.summaries[i] = self.generate_summary(i, self.top_n)
+            self.create_folder(self.folder_name + os.sep + "output")
+            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_page_rank_summary.txt"), "w+")
+            summary_file.write(self.summaries[i])
+            summary_file.close()
 
     @staticmethod
     def __sentence_similarity(sentence1: List[str], sentence2: List[str], stop_words=stopwords):
@@ -288,6 +299,13 @@ class ClusterSummarizer(Summarizer):
                     sent = sentence[0]
                     self.summaries.append(" ".join(sent))
         self.summaries = ". ".join(self.summaries)
+        if not os.path.exists(self.folder_name + os.sep + "output"):
+            os.mkdir(self.folder_name + os.sep + "output")
+
+        self.create_folder(self.folder_name + os.sep + "output")
+        summary_file = open(self.folder_name + os.sep + "output" + os.sep + "cluster_summary.txt", "w+")
+        summary_file.write(self.summaries)
+        summary_file.close()
 
     def __str__(self) -> str:
         return self.summaries
@@ -349,4 +367,10 @@ class KnowledgeBaseSummarizer(Summarizer):
         for i in range(len(self.texts)):
             sorted_sents = self.__generate_summary(i)
             self.summaries[i] = ". ".join(sorted_sents[0: self.top_n
-                if len(sorted_sents) >= self.top_n > 0 else (len(sorted_sents) / 2) + 1])
+                if len(sorted_sents) >= self.top_n > 0 else int(len(sorted_sents) / 2) + 1])
+            if not os.path.exists(self.folder_name + os.sep + "output"):
+                os.mkdir(self.folder_name + os.sep + "output")
+            self.create_folder(self.folder_name + os.sep + "output")
+            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_page_rank_summary.txt"), "w+")
+            summary_file.write(self.summaries[i])
+            summary_file.close()

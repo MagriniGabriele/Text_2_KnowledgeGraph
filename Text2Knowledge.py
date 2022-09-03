@@ -362,20 +362,34 @@ if __name__ == '__main__':
         print("Begin Extraction Benchmark")
 
         text_path = "documents" + os.sep + "mario draghi"
-        matcher = MatcherExtractor()
-        matcher_alt = AlternativeMatcherExtractor()
+        matcher = MatcherExtractor(verbose=True)
+        matcher_alt = AlternativeMatcherExtractor(verbose=True)
         print("Standard Matcher")
         for file in os.listdir(text_path):
             if not file.endswith(".txt"):
                 continue
+            triples = [[], [], []]
             print("Parsing File ", file)
             matcher.report_from_file(text_path + os.sep + file)
+            temp_triples = matcher.parse_from_file(text_path + os.sep + file)
+            triples[0] += temp_triples[0]
+            triples[1] += temp_triples[1]
+            triples[2] += temp_triples[2]
+            data_to_n3(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher.n3"))
+            data_to_graph(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher_plot.png"), show=False, save=True)
         print("Alternative Matcher")
         for file in os.listdir(text_path):
             if not file.endswith(".txt"):
                 continue
+            triples = [[], [], []]
             print("Parsing File ", file)
             matcher_alt.report_from_file(text_path + os.sep + file)
+            temp_triples = matcher_alt.parse_from_file(text_path + os.sep + file)
+            triples[0] += temp_triples[0]
+            triples[1] += temp_triples[1]
+            triples[2] += temp_triples[2]
+            data_to_n3(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher_alt.n3"))
+            data_to_graph(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher_alt_plot.png"), show=False, save=True)
 
         # summarization test battery:
 

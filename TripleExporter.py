@@ -43,7 +43,7 @@ def data_to_n3(triples, file_name: str,
                uri_prefix: str = "https://www.disit.dinfo.it",
                uri_separator: str = "/"):
     if isdir(file_name):
-        file_name = file_name + os.sep + "triple.n3"
+        file_name = file_name + os.sep + "output" + os.sep + "triple.n3"
     file = open(file_name.replace("txt", "n3"), "w+")
     source = triples[0]
     relations = triples[1]
