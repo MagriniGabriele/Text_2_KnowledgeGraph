@@ -371,6 +371,6 @@ class KnowledgeBaseSummarizer(Summarizer):
             if not os.path.exists(self.folder_name + os.sep + "output"):
                 os.mkdir(self.folder_name + os.sep + "output")
             self.create_folder(self.folder_name + os.sep + "output")
-            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_page_rank_summary.txt"), "w+")
+            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_kb_summary.txt"), "w+")
             summary_file.write(self.summaries[i])
             summary_file.close()

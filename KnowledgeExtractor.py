@@ -87,7 +87,6 @@ class MatcherExtractor(KnowledgeExtractor):
             text = text.replace("!\"", "\"!")
         if "?" in text:
             text = text.replace("?\"", "\"?")
-        text = text.replace(",", ".<stop>")  # AGGIUNTA VIRGOLA COME PUNTO STOP
         text = text.replace(".", ".<stop>")
         text = text.replace("?", "?<stop>")
         text = text.replace("!", "!<stop>")
