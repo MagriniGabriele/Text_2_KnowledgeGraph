@@ -48,9 +48,9 @@ def data_to_n3(triples, output_folder: str,
                prefix: str = "",
                uri_prefix: str = "https://www.disit.dinfo.it",
                uri_separator: str = "/"):
-    output_folder = output_folder + os.sep + "triples"
     if not isdir(output_folder):
         os.mkdir(output_folder)
+    output_folder = output_folder + os.sep + "triples"
     if not isdir(output_folder):
         os.mkdir(output_folder)
     file_name = output_folder + os.sep + f"{prefix}triple.n3"
