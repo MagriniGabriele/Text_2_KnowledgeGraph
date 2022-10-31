@@ -12,10 +12,13 @@ if __name__ == '__main__':
                                                  'files within are processed), extracting information and providing a '
                                                  'summary when requested. The output files will have the original name'
                                                  'and will be located inside PATH (or the folder containing it)')
-    parser.add_argument("-v", "--verbose", type=bool, default=False,
+    parser.add_argument("-v", "--verbose", default=False, action='store_true',
                         help="Print also the intermediate step of the process")
     parser.add_argument("target", nargs="+", type=str,
                         help="A path to a .txt file ora a folder", metavar="PATH")
+    parser.add_argument("--output", type=str, default="./output",
+                        help="Where dump the output",
+                        metavar="OUTPUT_PATH")
     parser.add_argument("--base-uri", nargs=1, type=str, default="https://www.disit.dinfo.it",
                         help="Base URI used during the triple creation, default 'https://www.disit.dinfo.it'",
                         metavar="BASE_URI")
@@ -24,24 +27,19 @@ if __name__ == '__main__':
     parser.add_argument("--extraction-method", nargs=1, type=int, default=0, choices=[0, 1],
                         help="The method used during information extraction:\n 0 -> Matcher\n | 1 -> Other",
                         metavar="EXTRACTION_MODE")
-    parser.add_argument("--show-plot", type=bool, default=False,
+    parser.add_argument("--show-plot", default=False, action='store_true',
                         help="If specified show the plot of the Knowledge Graph")
-    parser.add_argument("--save-plot", type=bool, default=False,
+    parser.add_argument("--save-plot", default=False, action='store_true',
                         help="If specified save the plot of the Knowledge Graph in PNG format")
-    parser.add_argument('--summarize', action='store_true')
-    parser.add_argument('--no-summarize', dest='summarize', action='store_false')
-    parser.set_defaults(summarize=True)
-    '''parser.add_argument("--summarize", type=bool, default=True,
-                        help="Supply this argument will cause the program to print the summary in the standard output."
-                             " Using this flag with the verbose flag will mix log and results, use with caution")
-    '''
+    parser.add_argument('--summarize', action='store_true', default=False)
     parser.add_argument("--number-of-sentences", nargs=1, default=5, type=int,
                         help="Number of sentences t be extracted, if the number is greater then the number of sentences"
                              "inside the original text half of the total sentences are extracted", metavar="N")
     parser.add_argument("--summarization-method", nargs=1, type=int, default=0, choices=[0, 1, 2],
                         help="The method used for creating the summary:\n 0 -> PageRank\n | 1 -> Clustering\n | 2 ->"
                              "Knowledge Base data parsing", metavar="SUMMARIZATION_MODE")
-    parser.add_argument("--score", "-s", type=bool, default=False, help="Perform a benchmark using a sample text")
+    parser.add_argument("--score", "-s", default=False, help="Perform a benchmark using a sample text",
+                        action='store_true')
 
     args = parser.parse_args()
 
@@ -72,8 +70,8 @@ if __name__ == '__main__':
                 print("Error: Cannot find a text file")
                 exit(-1)
             if args.show_plot or args.save_plot:
-                data_to_graph(triples, show=args.show_plot, save=args.save_plot, file_name=entry)
-            data_to_n3(triples, entry, uri_prefix=args.base_uri, uri_separator=args.separator)
+                data_to_graph(triples, show=args.show_plot, save=args.save_plot, output_folder=args.output)
+            data_to_n3(triples, output_folder=args.output, uri_prefix=args.base_uri, uri_separator=args.separator)
             if args.summarize:
                 if args.summarization_method == 0:
                     summarizer = PageRankSummarizer(entry, args.number_of_sentences)
@@ -82,7 +80,7 @@ if __name__ == '__main__':
                 else:
                     summarizer = KnowledgeBaseSummarizer(entry, args.number_of_sentences, triples)
 
-                summarizer.summarize()
+                summarizer.summarize(output_folder=args.output)
                 print(summarizer)
     else:
 
@@ -103,7 +101,7 @@ if __name__ == '__main__':
             triples[0] += temp_triples[0]
             triples[1] += temp_triples[1]
             triples[2] += temp_triples[2]
-            data_to_n3(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher.n3"))
+            data_to_n3(temp_triples, text_path + os.sep + argparse.output + os.sep + file.replace(".txt", "_matcher.n3"))
             data_to_graph(temp_triples, text_path + os.sep + "output" + os.sep + file.replace(".txt", "_matcher_plot.png"), show=False, save=True)
         print("Alternative Matcher")
         for file in os.listdir(text_path):
@@ -127,7 +125,7 @@ if __name__ == '__main__':
         pagerank = PageRankSummarizer(text_path, top_n=5, nlp_pipe=None)
         pagerank_coref = PageRankSummarizer(text_path, top_n=5, nlp_pipe=matcher.nlp)
 
-        pagerank.summarize()
+        pagerank.summarize(output_folder=args.output, prefix="pagerank_")
         pagerank_coref.summarize()
 
         pagerank.report(matcher)
@@ -139,7 +137,7 @@ if __name__ == '__main__':
         cluster = ClusterSummarizer(text_path, top_n=10)  # leggo più documenti, cerco più frasi
         cluster_coref = ClusterSummarizer(text_path, top_n=10,
                                           nlp_pipe=matcher.nlp)  # leggo più documenti, cerco più frasi
-        cluster.summarize()
+        cluster.summarize(output_folder=args.output, prefix="cluster_")
         cluster_coref.summarize()
 
         cluster.report(matcher)
@@ -158,7 +156,7 @@ if __name__ == '__main__':
             kb = KnowledgeBaseSummarizer(text_path, triples=triples, top_n=5, nlp_pipe=matcher.nlp)
             kb_alt = KnowledgeBaseSummarizer(text_path, triples=triples_alt, top_n=5, nlp_pipe=matcher_alt.nlp)
 
-            kb.summarize()
+            kb.summarize(output_folder=args.output, prefix="kb_")
             kb_alt.summarize()
 
             kb.report(matcher)

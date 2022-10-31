@@ -202,7 +202,17 @@ class MatcherExtractor(KnowledgeExtractor):
 
         # extract object
         target = [i[1] for i in entity_pairs]
-        return [source, relations, target]
+
+        # purge malformed triples
+        s = []
+        r = []
+        t = []
+        for i in range(len(source)):
+            if source[i] != "" and relations[i] != "" and target[i] != "":
+                s.append(source[i])
+                r.append(relations[i])
+                t.append(target[i])
+        return [s, r, t]
 
 
 class AlternativeMatcherExtractor(KnowledgeExtractor):

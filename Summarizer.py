@@ -66,7 +66,7 @@ class Summarizer(ABC):
         if not os.path.exists(folder):
             os.mkdir(folder)
 
-    def summarize(self):
+    def summarize(self, output_folder: str = None, prefix: str = ""):
         raise NotImplementedError
 
     def __str__(self) -> str:
@@ -117,13 +117,16 @@ class PageRankSummarizer(Summarizer):
     def __init__(self, document_dir: str, top_n: int = 5, nlp_pipe=None):
         super().__init__(document_dir, top_n, nlp_pipe)
 
-    def summarize(self):
+    def summarize(self, output_folder: str = None, prefix: str = ""):
         self.summaries = [""] * len(self.texts)
         for i in range(len(self.texts)):
             self.summaries[i] = self.generate_summary(i, self.top_n)
-            self.create_folder(self.folder_name + os.sep + "output")
-            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_page_rank_summary.txt"), "w+")
-            summary_file.write(self.summaries[i])
+        if output_folder is not None:
+            output_folder = output_folder + os.sep + "summary"
+            if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+            summary_file = open(output_folder + os.sep + f"{prefix}summary.txt", "w+")
+            summary_file.write("\n".join(self.summaries))
             summary_file.close()
 
     @staticmethod
@@ -257,7 +260,7 @@ class ClusterSummarizer(Summarizer):
             self.sentences[i] = (self.sentences[i][0], self.to_vector_space(self.sentences[i][0], list(self.word_set),
                                                                             stopwords.words("english")))
 
-    def summarize(self):
+    def summarize(self, output_folder: str = None, prefix: str = ""):
         """
         per effettuare il riassunto si procede come segue
         - si crea lo spazioe vettoriale formato da tutte le parole presenti in tutti i documenti
@@ -299,13 +302,13 @@ class ClusterSummarizer(Summarizer):
                     sent = sentence[0]
                     self.summaries.append(" ".join(sent))
         self.summaries = ". ".join(self.summaries)
-        if not os.path.exists(self.folder_name + os.sep + "output"):
-            os.mkdir(self.folder_name + os.sep + "output")
-
-        self.create_folder(self.folder_name + os.sep + "output")
-        summary_file = open(self.folder_name + os.sep + "output" + os.sep + "cluster_summary.txt", "w+")
-        summary_file.write(self.summaries)
-        summary_file.close()
+        if output_folder is not None:
+            output_folder = output_folder + os.sep + "summary"
+            if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+            summary_file = open(output_folder + os.sep + f"{prefix}summary.txt", "w+")
+            summary_file.write(self.summaries)
+            summary_file.close()
 
     def __str__(self) -> str:
         return self.summaries
@@ -362,15 +365,16 @@ class KnowledgeBaseSummarizer(Summarizer):
             result.append(" ".join(r[1]))
         return result
 
-    def summarize(self):
+    def summarize(self, output_folder: str = None, prefix: str = ""):
         self.summaries = [""] * len(self.texts)
         for i in range(len(self.texts)):
             sorted_sents = self.__generate_summary(i)
             self.summaries[i] = ". ".join(sorted_sents[0: self.top_n
                 if len(sorted_sents) >= self.top_n > 0 else int(len(sorted_sents) / 2) + 1])
-            if not os.path.exists(self.folder_name + os.sep + "output"):
-                os.mkdir(self.folder_name + os.sep + "output")
-            self.create_folder(self.folder_name + os.sep + "output")
-            summary_file = open(self.folder_name + os.sep + "output" + os.sep + self.names[i].replace(".txt", "_kb_summary.txt"), "w+")
-            summary_file.write(self.summaries[i])
+        if output_folder is not None:
+            output_folder = output_folder + os.sep + "summary"
+            if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+            summary_file = open(output_folder + os.sep + f"{prefix}summary.txt", "w+")
+            summary_file.write("\n".join(self.summaries))
             summary_file.close()
