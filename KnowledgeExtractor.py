@@ -12,7 +12,7 @@ from Metrics import information_density, usable_triples_density, usable_informat
 alphabets = "([A-Za-z])"
 prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
 suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+starters = "(Mr|Mrs|Ms|Dr|He\\s|She\\s|It\\s|They\\s|Their\\s|Our\\s|We\\s|But\\s|However\\s|That\\s|This\\s|Wherever)"
 acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 websites = "[.](com|net|org|io|gov)"
 digits = "([0-9])"
@@ -60,7 +60,6 @@ class KnowledgeExtractor(ABC):
 
 
 class MatcherExtractor(KnowledgeExtractor):
-
     @staticmethod
     def split_into_sentences(text, verbose: bool):
         text = " " + text + "  "
@@ -87,6 +86,8 @@ class MatcherExtractor(KnowledgeExtractor):
             text = text.replace("!\"", "\"!")
         if "?" in text:
             text = text.replace("?\"", "\"?")
+        text = text.replace(";", ";<stop>")
+        text = text.replace(",", ",<stop>")
         text = text.replace(".", ".<stop>")
         text = text.replace("?", "?<stop>")
         text = text.replace("!", "!<stop>")
@@ -98,6 +99,7 @@ class MatcherExtractor(KnowledgeExtractor):
         sentences = text.split("<stop>")
         sentences = sentences[:-1]
         sentences = [s.strip() for s in sentences]
+        # sentences = [self.nlp(s)._.coref_resolved for s in sentences]
         return sentences
 
     def get_entities(self, sent):
@@ -184,7 +186,7 @@ class MatcherExtractor(KnowledgeExtractor):
 
         # seconda iterazione di spacy, estraggo i dati
         entity_pairs = []
-        new_text = str(doc)
+        new_text = str(coref_solved_text)
         sentences = self.split_into_sentences(new_text, self.verbose)
 
         if self.verbose:
