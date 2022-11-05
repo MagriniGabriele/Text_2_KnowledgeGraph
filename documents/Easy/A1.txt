@@ -1,3 +1,5 @@
-The cat is on the table,it has a black fur.
-Lorenzo is watching the cat. Lorenzo was beaten by some albanians,they were sent to jail.
-Lorenzo comes from New York.This famous city hosts many important football clubs.
+John studies at UniFi, at the moment he's attending his second
+year of a master degree in Artificial Intelligence.
+He's brilliant, and he's looking forward to express his creativity.
+Nick works with John; currently they are engaged in a collaborative project regarding the semantic meaning of a given set of text: the goal is to implement an architecture
+composed of an information exaqtraction pipeline and a text summarization model.

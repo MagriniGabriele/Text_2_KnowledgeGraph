@@ -12,7 +12,7 @@ from Metrics import information_density, usable_triples_density, usable_informat
 alphabets = "([A-Za-z])"
 prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
 suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-starters = "(Mr|Mrs|Ms|Dr|He\\s|She\\s|It\\s|They\\s|Their\\s|Our\\s|We\\s|But\\s|However\\s|That\\s|This\\s|Wherever)"
+starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
 acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 websites = "[.](com|net|org|io|gov)"
 digits = "([0-9])"
@@ -23,13 +23,13 @@ class KnowledgeExtractor(ABC):
     def __init__(self, language_model: str = None, verbose: bool = False):
         if language_model is None:
             # il modell di default è quello inglese
-            self.nlp = spacy.load("en_core_web_sm")
+            self.nlp = spacy.load("en_core_web_lg")
         else:
             try:
                 self.nlp = spacy.load(language_model)
             except Exception as e:
                 print("Could not found language model, check for typos or if installed: using English model")
-                self.nlp = spacy.load("en_core_web_sm")
+                self.nlp = spacy.load("en_core_web_lg")
         self.verbose = verbose
         neuralcoref.add_to_pipe(self.nlp)
 
@@ -86,6 +86,7 @@ class MatcherExtractor(KnowledgeExtractor):
             text = text.replace("!\"", "\"!")
         if "?" in text:
             text = text.replace("?\"", "\"?")
+        text = text.replace(":", ":<stop>")
         text = text.replace(";", ";<stop>")
         text = text.replace(",", ",<stop>")
         text = text.replace(".", ".<stop>")
@@ -144,6 +145,7 @@ class MatcherExtractor(KnowledgeExtractor):
                     ## chunk 4
                 if tok.dep_.find("obj") == True:
                     ent2 = modifier + " " + prefix + " " + tok.text
+
 
                 ## chunk 5
                 # update variables
