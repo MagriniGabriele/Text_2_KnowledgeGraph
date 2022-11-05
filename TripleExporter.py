@@ -41,6 +41,7 @@ def data_to_graph(triples, output_folder: str,
         plt.figure(figsize=(24, 24))
         pos = nx.spring_layout(G, k=1, scale=1)  # k regulates the distance between nodes
         nx.draw(G, with_labels=True, node_color='skyblue', node_size=4500, edge_cmap=plt.cm.Blues, pos=pos)
+        nx.draw_networkx_edge_labels(G, pos=pos, rotate=False)
         plt.savefig(fname=output_folder, format="png")
 
 
