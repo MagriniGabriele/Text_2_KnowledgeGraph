@@ -203,8 +203,13 @@ class PageRankSummarizer(Summarizer):
         ranked_sentences = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
         print("Ranked sentences: ", ranked_sentences)
         for i in range(top_n if top_n < len(sentences) else int(len(sentences) / 2 + 1)):
-            summarized_sentences.append(" ".join(ranked_sentences[i][1]))
-        return ". ".join(summarized_sentences)
+            summarized_sentences.append(ranked_sentences[i][1])
+            # summarized_sentences.append(" ".join(ranked_sentences[i][1]))
+        result = []
+        for sent in sentences:
+            if sent in summarized_sentences:
+                result.append(" ".join(sent))
+        return ". ".join(result)
 
 
 class ClusterSummarizer(Summarizer):

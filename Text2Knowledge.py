@@ -24,7 +24,7 @@ if __name__ == '__main__':
                         metavar="BASE_URI")
     parser.add_argument("--separator", nargs=1, type=str, default="/",
                         help="Separator between base URI and element name, default '/'", metavar="SEP")
-    parser.add_argument("--extraction-method", nargs=1, type=int, default=0, choices=[0, 1],
+    parser.add_argument("--extraction-method", nargs=1, type=int, default=0, choices=[0, 1, 2],
                         help="The method used during information extraction:\n 0 -> Matcher\n | 1 -> Other",
                         metavar="EXTRACTION_MODE")
     parser.add_argument("--show-plot", default=False, action='store_true',
@@ -40,19 +40,23 @@ if __name__ == '__main__':
                              "Knowledge Base data parsing", metavar="SUMMARIZATION_MODE")
     parser.add_argument("--score", "-s", default=False, help="Perform a benchmark using a sample text",
                         action='store_true')
+    parser.add_argument("--second-extraction", default=False, help="Perform a second extraction based on the previous one",
+                        action='store_true')
+
 
     args = parser.parse_args()
 
     if not args.score:
         files = []
+
         extractor = MatcherExtractor(verbose=args.verbose) if args.extraction_method == 0 \
-            else AlternativeMatcherExtractor(verbose=args.verbose)
+                else AlternativeMatcherExtractor(verbose=args.verbose)
         summarizer = None
         last_text = ""
         for entry in args.target:
-            # ogni caretella dovrebbe avere documenti affini
+                # ogni caretella dovrebbe avere documenti affini
 
-            # triplificazione
+                # triplificazione
             triples = [[], [], []]
             if isdir(entry):
                 for file in os.listdir(entry):
@@ -74,14 +78,45 @@ if __name__ == '__main__':
             data_to_n3(triples, output_folder=args.output, uri_prefix=args.base_uri, uri_separator=args.separator)
             if args.summarize:
                 if args.summarization_method == 0:
-                    summarizer = PageRankSummarizer(entry, args.number_of_sentences)
+                    summarizer = PageRankSummarizer(entry, args.number_of_sentences, nlp_pipe=extractor.nlp)
                 elif args.summarization_method == 1:
-                    summarizer = ClusterSummarizer(entry, args.number_of_sentences)
+                    summarizer = ClusterSummarizer(entry, args.number_of_sentences, nlp_pipe=extractor.nlp)
                 else:
                     summarizer = KnowledgeBaseSummarizer(entry, args.number_of_sentences, triples)
 
                 summarizer.summarize(output_folder=args.output)
                 print(summarizer)
+        if args.second_extraction and args.summarize:
+            last_text = ""
+            entries = [args.output + os.sep + "summary"]
+            for entry in entries:
+                # ogni caretella dovrebbe avere documenti affini
+
+                # triplificazione
+                triples = [[], [], []]
+                if isdir(entry):
+                    for file in os.listdir(entry):
+                        if file.endswith(".txt"):
+                            temp_triples = extractor.parse_from_file(entry + os.sep + file,
+                                                                     verbose=args.verbose)
+                            triples[0] += temp_triples[0]
+                            triples[1] += temp_triples[1]
+                            triples[2] += temp_triples[2]
+                elif isfile(entry) and entry.endswith(".txt"):
+                    temp_triples = extractor.parse_from_file(entry, verbose=args.verbose)
+                    triples[0] += temp_triples[0]
+                    triples[1] += temp_triples[1]
+                    triples[2] += temp_triples[2]
+
+                else:
+                    print("Error: Cannot find a text file")
+                    exit(-1)
+                if args.second_extraction and (args.show_plot or args.save_plot):
+                    data_to_graph(triples, show=args.show_plot, save=args.save_plot, output_folder=args.output,
+                                  prefix="second_")
+                data_to_n3(triples, output_folder=args.output, uri_prefix=args.base_uri, uri_separator=args.separator,
+                           prefix="second_")
+
     else:
 
         for entry in args.target:
