@@ -27,11 +27,11 @@ if __name__ == '__main__':
     parser.add_argument("--extraction-method", nargs=1, type=int, default=0, choices=[0, 1, 2],
                         help="The method used during information extraction:\n 0 -> Matcher\n | 1 -> Other",
                         metavar="EXTRACTION_MODE")
-    parser.add_argument("--show-plot", default=False, action='store_true',
+    parser.add_argument("--show-plot", default=True, action='store_true',
                         help="If specified show the plot of the Knowledge Graph")
-    parser.add_argument("--save-plot", default=False, action='store_true',
+    parser.add_argument("--save-plot", default=True, action='store_true',
                         help="If specified save the plot of the Knowledge Graph in PNG format")
-    parser.add_argument('--summarize', action='store_true', default=False)
+    parser.add_argument('--summarize', action='store_true', default=True)
     parser.add_argument("--number-of-sentences", nargs=1, default=5, type=int,
                         help="Number of sentences t be extracted, if the number is greater then the number of sentences"
                              "inside the original text half of the total sentences are extracted", metavar="N")
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                              "Knowledge Base data parsing", metavar="SUMMARIZATION_MODE")
     parser.add_argument("--score", "-s", default=False, help="Perform a benchmark using a sample text",
                         action='store_true')
-    parser.add_argument("--second-extraction", default=False, help="Perform a second extraction based on the previous one",
+    parser.add_argument("--second-extraction", default=True, help="Perform a second extraction based on the previous one",
                         action='store_true')
 
 
