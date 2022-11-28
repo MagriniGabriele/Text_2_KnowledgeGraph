@@ -1,3 +1,4 @@
+from typing import List
 
 
 def information_density(triples, doc) -> float:
@@ -71,3 +72,18 @@ def extractive_comparison(original_text: str, summarized_text: str, extractor):
     triples = extractor.parse(summarized_text)
     print("Summarized document usable information density is ",
           usable_information_density(triples, extractor.nlp(summarized_text)))
+
+
+def summarization_information_loss(original_text: str, summarized_text: str, extractor) -> float:
+    original_text_n_triples = len(extractor.parse(original_text))
+    summarized_text_n_triples = len(extractor.parse(summarized_text))
+    return summarized_text_n_triples / original_text_n_triples
+
+
+def summarization_compression(original_text: List[str], summarized_text: List[str]) -> float:
+    return len(summarized_text) / len(original_text)
+
+
+def mixed_metric(original_text: List[str], summarized_text: List[str], extractor) -> float:
+    return summarization_information_loss(" ".join(original_text), " ".join(summarized_text), extractor) * \
+        summarization_compression(original_text, summarized_text)
