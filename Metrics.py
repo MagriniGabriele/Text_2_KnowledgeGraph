@@ -87,3 +87,7 @@ def summarization_compression(original_text: List[str], summarized_text: List[st
 def mixed_metric(original_text: List[str], summarized_text: List[str], extractor) -> float:
     return summarization_information_loss(" ".join(original_text), " ".join(summarized_text), extractor) * \
         summarization_compression(original_text, summarized_text)
+
+
+def gt_metric(gt_relations: int, found_relations: int) -> float:
+    return found_relations/gt_relations
