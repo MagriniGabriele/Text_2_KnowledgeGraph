@@ -33,8 +33,8 @@ class Summarizer(ABC):
             texts = list()
             names = list()
             for file in os.listdir(path):
-                if not file.endswith(".txt"):
-                    # ignora file non testuali
+                if not file.endswith(".txt") or "GT.txt" in file:
+                    # ignora file non testuali e ground truth
                     continue
                 document = open(path + os.sep + file, "r")
                 text = "".join(document.readlines())
@@ -60,10 +60,10 @@ class Summarizer(ABC):
             print("Compression ratio: ", compression_ratio(self.texts[i], self.summaries[i], extractor.nlp))
             print("Data loss: ", data_loss(self.texts[i], self.summaries[i], extractor.nlp))
             print("Synthesis score: ", synthesis_score(self.texts[i], self.summaries[i], extractor.nlp))
-            print("Summarization score: ", summarization_information_ratio(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Summarization score: ", summarization_information_ratio(self.texts[i], self.summaries[i], extractor))
             print("Summarization compression: ", summarization_compression(self.texts[i], self.summaries[i], extractor.nlp))
-            print("Mixed metrics: ", mixed_metric(self.texts[i], self.summaries[i], extractor.nlp))
-            print("Ground truth metric: ", gt_metric(path, self.summaries[i]), extractor.nlp)
+            print("Mixed metrics: ", mixed_metric(self.texts[i], self.summaries[i], extractor))
+            print("Ground truth metric: ", gt_metric(path, self.summaries[i], extractor), extractor.nlp)
             extractive_comparison(self.texts[i], self.summaries[i], extractor)
 
     def create_folder(self, folder):
@@ -235,11 +235,15 @@ class ClusterSummarizer(Summarizer):
                 self.word_set = self.word_set | set(sent)
         self.clusters = []
 
-    def report(self, extractor):
+    def report(self, extractor, gt_path: str):
         text = "\n".join(self.texts)
         print("Compression ratio: ", compression_ratio(text, self.summaries, extractor.nlp))
         print("Data loss: ", data_loss(text, self.summaries, extractor.nlp))
         print("Synthesis score: ", synthesis_score(text, self.summaries, extractor.nlp))
+        print("Summarization score: ", summarization_information_ratio(text, self.summaries, extractor))
+        print("Summarization compression: ", summarization_compression(text, self.summaries, extractor.nlp))
+        print("Mixed metrics: ", mixed_metric(text, self.summaries, extractor))
+        print("Ground truth metric: ", gt_metric(gt_path, self.summaries, extractor), extractor.nlp)
         extractive_comparison(text, self.summaries, extractor)
 
     @staticmethod

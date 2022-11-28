@@ -121,7 +121,6 @@ if __name__ == '__main__':
 
         for entry in args.target:
 
-
             # extraction test battery:
             print("Begin Extraction Benchmark")
 
@@ -129,7 +128,7 @@ if __name__ == '__main__':
             matcher_alt = AlternativeMatcherExtractor(verbose=True)
             print("Standard Matcher")
             for file in os.listdir(entry):
-                if not file.endswith(".txt"):
+                if not(file.endswith(".txt")) or "GT.txt" in file:
                     continue
                 triples = [[], [], []]
                 print("Parsing File ", entry + os.sep + file)
@@ -140,20 +139,6 @@ if __name__ == '__main__':
                 triples[2] += temp_triples[2]
                 data_to_n3(temp_triples, output_folder=args.output, prefix="standard_matcher_")
                 data_to_graph(temp_triples, output_folder=args.output, prefix="standard_matcher_", show=False, save=True)
-            print("Alternative Matcher")
-            for file in os.listdir(entry):
-                if not file.endswith(".txt"):
-                    continue
-                triples = [[], [], []]
-                print("Parsing File ", file)
-                matcher_alt.report_from_file(entry + os.sep + file)
-                temp_triples = matcher_alt.parse_from_file(entry + os.sep + file)
-                triples[0] += temp_triples[0]
-                triples[1] += temp_triples[1]
-                triples[2] += temp_triples[2]
-                data_to_n3(temp_triples, output_folder=args.output, prefix="alternative_matcher_")
-                data_to_graph(temp_triples, output_folder=args.output, prefix="alternative_matcher_", show=False, save=True)
-
             # summarization test battery:
 
             print("Begin Summarization benchmark")
@@ -165,8 +150,8 @@ if __name__ == '__main__':
             pagerank.summarize(output_folder=args.output, prefix="pagerank_")
             pagerank_coref.summarize(output_folder=args.output, prefix="coref_pagerank_")
 
-            pagerank.report(matcher)
-            pagerank_coref.report(matcher)
+            pagerank.report(matcher, entry + os.sep + "GT.txt")
+            pagerank_coref.report(matcher, entry + os.sep + "GT.txt")
             # pagerank.report(matcher_alt)
             # pagerank_coref.report(matcher_alt)
 
@@ -177,26 +162,26 @@ if __name__ == '__main__':
             cluster.summarize(output_folder=args.output, prefix="cluster_")
             cluster_coref.summarize(output_folder=args.output, prefix="cluster_")
 
-            cluster.report(matcher)
-            cluster_coref.report(matcher)
+            cluster.report(matcher, entry + os.sep + "GT.txt")
+            cluster_coref.report(matcher, entry + os.sep + "GT.txt")
             # cluster.report(matcher_alt)
             # cluster_coref.report(matcher_alt)
 
             print("KnowledgeBase Summarizer")
             for file in os.listdir(entry):
-                if not file.endswith(".txt"):
+                if not file.endswith(".txt") or "GT.txt" in file:
                     continue
                 print("Summarizing ", file)
                 triples = matcher.parse_from_file(entry + os.sep + file)
-                triples_alt = matcher_alt.parse_from_file(entry + os.sep + file)
+                # triples_alt = matcher_alt.parse_from_file(entry + os.sep + file)
 
                 kb = KnowledgeBaseSummarizer(entry, triples=triples, top_n=5, nlp_pipe=matcher.nlp)
-                kb_alt = KnowledgeBaseSummarizer(entry, triples=triples_alt, top_n=5, nlp_pipe=matcher_alt.nlp)
+                # kb_alt = KnowledgeBaseSummarizer(entry, triples=triples_alt, top_n=5, nlp_pipe=matcher_alt.nlp)
 
                 kb.summarize(output_folder=args.output, prefix="kb_")
-                kb_alt.summarize()
+                # kb_alt.summarize()
 
-                kb.report(matcher)
+                kb.report(matcher, entry + os.sep + "GT.txt")
                 # kb_alt.report(matcher_alt)
         #
         # me = MatcherExtractor(verbose=args.verbose)
