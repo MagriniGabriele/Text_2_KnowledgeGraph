@@ -12,7 +12,7 @@ import os
 import numpy as np
 import networkx as nx
 
-from Metrics import compression_ratio, data_loss, synthesis_score, extractive_comparison
+from Metrics import compression_ratio, data_loss, synthesis_score, extractive_comparison, summarization_information_ratio, summarization_compression, mixed_metric, gt_metric
 
 class Summarizer(ABC):
     """
@@ -54,12 +54,16 @@ class Summarizer(ABC):
         self.texts, self.names = _load_text(document_dir)
         self.summaries = list()
 
-    def report(self, extractor):
+    def report(self, extractor, path: str):
         for i in range(len(self.texts)):
             print("Document #", i + 1)
             print("Compression ratio: ", compression_ratio(self.texts[i], self.summaries[i], extractor.nlp))
             print("Data loss: ", data_loss(self.texts[i], self.summaries[i], extractor.nlp))
             print("Synthesis score: ", synthesis_score(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Summarization score: ", summarization_information_ratio(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Summarization compression: ", summarization_compression(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Mixed metrics: ", mixed_metric(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Ground truth metric: ", gt_metric(path, self.summaries[i]), extractor.nlp)
             extractive_comparison(self.texts[i], self.summaries[i], extractor)
 
     def create_folder(self, folder):

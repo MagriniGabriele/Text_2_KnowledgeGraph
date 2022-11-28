@@ -74,20 +74,27 @@ def extractive_comparison(original_text: str, summarized_text: str, extractor):
           usable_information_density(triples, extractor.nlp(summarized_text)))
 
 
-def summarization_information_loss(original_text: str, summarized_text: str, extractor) -> float:
-    original_text_n_triples = len(extractor.parse(original_text))
-    summarized_text_n_triples = len(extractor.parse(summarized_text))
+def summarization_information_ratio(original_text: str, summarized_text: str, extractor) -> float:
+    original_text_n_triples = len(extractor.parse(original_text)[0])
+    summarized_text_n_triples = len(extractor.parse(summarized_text)[0])
     return summarized_text_n_triples / original_text_n_triples
 
 
-def summarization_compression(original_text: List[str], summarized_text: List[str]) -> float:
-    return len(summarized_text) / len(original_text)
+def summarization_compression(original_text: str, summarized_text: str, nlp_pipe) -> float:
+    # summarized = [str(token) for token in nlp_pipe(summarized_text)]
+    summarized = len(nlp_pipe(summarized_text))
+    original = len(nlp_pipe(original_text))
+    # original = [str(token) for token in nlp_pipe(original_text)]
+    return summarized / original
 
 
-def mixed_metric(original_text: List[str], summarized_text: List[str], extractor) -> float:
-    return summarization_information_loss(" ".join(original_text), " ".join(summarized_text), extractor) * \
-        summarization_compression(original_text, summarized_text)
+def mixed_metric(original_text: str, summarized_text: str, extractor) -> float:
+    return summarization_information_ratio(original_text, summarized_text, extractor) * \
+        summarization_compression(original_text, summarized_text, extractor.nlp)
 
 
-def gt_metric(gt_relations: int, found_relations: int) -> float:
-    return found_relations/gt_relations
+def gt_metric(gt_path: str,  summarized_text: str, extractor) -> float:
+    file = open(gt_path, "r")
+    gt_relations = int(file.read())
+    summarized_text_n_triples = len(extractor.parse(summarized_text)[0])
+    return summarized_text_n_triples/gt_relations
