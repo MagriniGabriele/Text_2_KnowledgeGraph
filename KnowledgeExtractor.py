@@ -41,21 +41,21 @@ class KnowledgeExtractor(ABC):
             text += line
         return text
 
-    def parse_from_file(self, path_to_file: str, verbose: bool = False):
+    def parse_from_file(self, path_to_file: str):
         text = self.text_from_file(path_to_file)
-        return self.parse(text, verbose)
+        return self.parse(text)
 
     def report_from_file(self, path_to_file: str):
         text = self.text_from_file(path_to_file)
         self.report(text)
 
     def report(self, text):
-        triples = self.parse(text, verbose=False)
+        triples = self.parse(text)
         print("Information density: ", information_density(triples, self.nlp(text)))
         print("Usable triples density: ", usable_triples_density(triples, self.nlp(text)))
         print("Usable information density: ", usable_information_density(triples, self.nlp(text)))
 
-    def parse(self, text, verbose: bool = False):
+    def parse(self, text):
         raise NotImplementedError
 
 
@@ -178,7 +178,7 @@ class MatcherExtractor(KnowledgeExtractor):
         else:
             return ""
 
-    def parse(self, text, verbose: bool = False):
+    def parse(self, text):
         # prima iterazione di spacy, risolvo le coreferenze
         doc = self.nlp(text)
         coref_solved_text = doc._.coref_resolved
@@ -320,11 +320,11 @@ class AlternativeMatcherExtractor(KnowledgeExtractor):
 
         return pairs
 
-    def parse(self, text, verbose: bool = False):
+    def parse(self, text):
         triples = [[], [], []]
         pairs = self.get_entity_pairs(text)
         for i in pairs:
-            if verbose:
+            if self.verbose:
                 print(pairs[i])
             try:
                 t_0 = pairs[i][0]

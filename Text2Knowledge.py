@@ -124,8 +124,8 @@ if __name__ == '__main__':
             # extraction test battery:
             print("Begin Extraction Benchmark")
 
-            matcher = MatcherExtractor(verbose=True)
-            matcher_alt = AlternativeMatcherExtractor(verbose=True)
+            matcher = MatcherExtractor(verbose=args.verbose)
+            matcher_alt = AlternativeMatcherExtractor(verbose=args.verbose)
             print("Standard Matcher")
             for file in os.listdir(entry):
                 if not(file.endswith(".txt")) or "GT.txt" in file:

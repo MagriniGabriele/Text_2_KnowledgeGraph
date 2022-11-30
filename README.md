@@ -10,4 +10,5 @@ https://www.overleaf.com/read/ggdbqnpsxtjp
 For instruction about using this program, run  
 ```python Text2Knowledge.py -h```
 For running a benchmark execute
-```python Text2Knowledge.py . --score True```
+```python Text2Knowledge.py {path_to_texts_folder} --output {path_to_output} --score```
+Note the ground truth count must be placed in the GT.txt file inside the source folder

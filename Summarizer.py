@@ -12,7 +12,9 @@ import os
 import numpy as np
 import networkx as nx
 
-from Metrics import compression_ratio, data_loss, synthesis_score, extractive_comparison, summarization_information_ratio, summarization_compression, mixed_metric, gt_metric
+from Metrics import compression_ratio, data_loss, synthesis_score, extractive_comparison, \
+    summarization_information_ratio, summarization_compression, mixed_metric, gt_metric
+
 
 class Summarizer(ABC):
     """
@@ -61,12 +63,14 @@ class Summarizer(ABC):
             print("Data loss: ", data_loss(self.texts[i], self.summaries[i], extractor.nlp))
             print("Synthesis score: ", synthesis_score(self.texts[i], self.summaries[i], extractor.nlp))
             print("Summarization score: ", summarization_information_ratio(self.texts[i], self.summaries[i], extractor))
-            print("Summarization compression: ", summarization_compression(self.texts[i], self.summaries[i], extractor.nlp))
+            print("Summarization compression: ",
+                  summarization_compression(self.texts[i], self.summaries[i], extractor.nlp))
             print("Mixed metrics: ", mixed_metric(self.texts[i], self.summaries[i], extractor))
             print("Ground truth metric: ", gt_metric(path, self.summaries[i], extractor), extractor.nlp)
             extractive_comparison(self.texts[i], self.summaries[i], extractor)
 
-    def create_folder(self, folder):
+    @staticmethod
+    def create_folder(folder):
         if not os.path.exists(folder):
             os.mkdir(folder)
 
@@ -189,7 +193,7 @@ class PageRankSummarizer(Summarizer):
                 sm[i][j] = PageRankSummarizer.__sentence_similarity(sentences[i], sentences[j], stop_words)
         return sm
 
-    def generate_summary(self, file_index: int, top_n: int = 5):
+    def generate_summary(self, file_index: int, top_n: int = 5, verbose: bool = False):
         """
         crea il riassunto del testo usando l'algoritmo di page rank
         :param file_index: indice del testo da riassumere
@@ -205,7 +209,8 @@ class PageRankSummarizer(Summarizer):
         scores = nx.pagerank(sentence_similarity_graph)
 
         ranked_sentences = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
-        print("Ranked sentences: ", ranked_sentences)
+        if verbose:
+            print("Ranked sentences: ", ranked_sentences)
         for i in range(top_n if top_n < len(sentences) else int(len(sentences) / 2 + 1)):
             summarized_sentences.append(ranked_sentences[i][1])
             # summarized_sentences.append(" ".join(ranked_sentences[i][1]))
@@ -383,7 +388,7 @@ class KnowledgeBaseSummarizer(Summarizer):
         for i in range(len(self.texts)):
             sorted_sents = self.__generate_summary(i)
             self.summaries[i] = ". ".join(sorted_sents[0: self.top_n
-                if len(sorted_sents) >= self.top_n > 0 else int(len(sorted_sents) / 2) + 1])
+            if len(sorted_sents) >= self.top_n > 0 else int(len(sorted_sents) / 2) + 1])
         if output_folder is not None:
             output_folder = output_folder + os.sep + "summary"
             if not os.path.exists(output_folder):
